@@ -1,4 +1,6 @@
 Features:
+    * a spinbutton to scroll parameter pages for operator control dialogs with
+      lots of parameters (e. g. hermes filter)
     * shift left-click resets operator parameters to default values
 Fixes:
     * edit preferences crashes (once more)

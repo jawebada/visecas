@@ -117,18 +117,32 @@ class OperatorControlDialog < Gtk::Dialog
 
         scw = nil
         vp = nil
+        sb = nil
 
         if table.n_columns <= 2
             vbox.pack_start(table, true, true)
         else
             table.homogeneous = true
             scw = Gtk::ScrolledWindow.new()
-            scw.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC)
+            scw.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_NEVER)
             vp = Gtk::Viewport.new(nil, nil)
             vp.shadow_type = Gtk::SHADOW_NONE
             vp.add(table)
             scw.add(vp)
             vbox.pack_start(scw, true, true)
+            # scroll spinbutton
+            hb = Gtk::HBox.new()
+            hb.spacing = 6
+            l = Gtk::Label.new("Parameter page: ")
+            l.xalign = 0.0
+            hb.pack_start(l, false, false)
+            sb = Gtk::SpinButton.new(1, table.n_columns, 1)
+            sb.digits = 0
+            hb.pack_start(sb, false, false)
+            l = Gtk::Label.new("of #{table.n_columns}")
+            l.xalign = 0.0
+            hb.pack_start(l, false, false)
+            vbox.pack_start(hb, true, true)
         end
 
         self.show_all()
@@ -138,11 +152,14 @@ class OperatorControlDialog < Gtk::Dialog
             col_width = width / table.n_columns
             scw.set_size_request(col_width, height + 20)
             self.queue_resize()
+            sb.signal_connect("value-changed") do |sb|
+                scw.hadjustment.value = (sb.value - 1) * col_width
+            end
             # XXX this does not what I thought it would do
             # how do I make the scw scroll in tab columns width?
             #scw.hadjustment = vp.hadjustment = Gtk::Adjustment.new(0, 0, width, col_width, col_width, 0)
-            scw.hadjustment.step_increment = 
-            scw.hadjustment.page_increment = col_width
+            #scw.hadjustment.step_increment = 
+            #scw.hadjustment.page_increment = col_width
         elsif @has_hscale
             # make window width resizable up to 600 px (vscale)
             width, height = self.size
