@@ -17,11 +17,14 @@
 # ---------------------------------------------------------------------------
 
 require "visecas/config"
+require "visecas/destroyable-gtk-object"
 require "gtk2"
 
 module Visecas
 
 class OperatorControlDialog < Gtk::Dialog
+    include DestroyableGtkObject
+
     RESPONSE_CLOSE = 1
 
     attr_accessor   :chain, 
@@ -55,16 +58,13 @@ class OperatorControlDialog < Gtk::Dialog
             vbox.pack_start(l, false, false)
         end
 
-        @signal_handlers = []
-        h = @chainsetup.signal_connect("notify::name") {set_title()}
-        @signal_handlers.push(h)
-        h = @chainsetup.signal_connect("chain_renamed") do |cs, old_name, new_name|
+        destroyable_signal_connect(@chainsetup, "notify::name") {set_title()}
+        destroyable_signal_connect(@chainsetup, "chain_renamed") do |cs, old_name, new_name|
             if @chain == old_name
                 @chain = new_name
                 set_title()
             end
         end
-        @signal_handlers.push(h)
 
         table = Gtk::Table.new(1, 1)
         table.row_spacings = 3
@@ -113,10 +113,6 @@ class OperatorControlDialog < Gtk::Dialog
             if control["range_label"]
                 range_labels_size_group.add_widget(control["range_label"]) 
             end
-        end
-
-        self.signal_connect("destroy") do |dlg, event|
-            @signal_handlers.each {|h| @chainsetup.signal_handler_disconnect(h)}
         end
 
         scw = nil

@@ -17,6 +17,7 @@
 # ---------------------------------------------------------------------------
 
 require "visecas/config"
+require "visecas/destroyable-gtk-object"
 require "visecas/audio-format"
 require "visecas/position-string"
 require "visecas/operators-browser"
@@ -28,6 +29,8 @@ require "gtk2"
 module Visecas
 
 class MainWindow < Gtk::Window
+    include DestroyableGtkObject
+
     attr_reader :chainsetup
 
     def initialize(application, chainsetup)
@@ -164,18 +167,12 @@ class MainWindow < Gtk::Window
     end
 
     def setup_signal_handlers()
-        @handlers = {}
-        @handlers[@application] = []
-        @handlers[@engine] = []
-
         ###############################################
         # preferences are shown/hidden
         ###############################################
-        @handlers[@application].push(
-            @application.signal_connect("notify::prefsvisible") do |app, pspec|
-                w("menu_edit_preferences").sensitive = ! @application.prefsvisible
-            end
-        )
+        destroyable_signal_connect(@application, "notify::prefsvisible") do |app, pspec|
+            w("menu_edit_preferences").sensitive = ! @application.prefsvisible
+        end
         
         ###############################################
         # connect toggled
@@ -213,7 +210,7 @@ class MainWindow < Gtk::Window
         ###############################################
         # chainsetup's loop status changed
         ###############################################
-        @chainsetup.signal_connect("notify::looped") do |chainsetup, pspec|
+        destroyable_signal_connect(@chainsetup, "notify::looped") do |chainsetup, pspec|
             looped = @chainsetup.looped
             w("loop_togglebutton").signal_handler_block(@loop_togglebutton_handler)
             w("loop_togglebutton").active = looped
@@ -225,21 +222,21 @@ class MainWindow < Gtk::Window
         ###############################################
         # chainsetup got dirty/saved
         ###############################################
-        @chainsetup.signal_connect("notify::dirty") do |chainsetup, pspec|
+        destroyable_signal_connect(@chainsetup, "notify::dirty") do |chainsetup, pspec|
             w("save_button").sensitive = w("menu_file_save").sensitive = @chainsetup.dirty
         end
 
         ###############################################
         # chainsetup's name changed
         ###############################################
-        @chainsetup.signal_connect("notify::name") do |chainsetup, pspec|
+        destroyable_signal_connect(@chainsetup, "notify::name") do |chainsetup, pspec|
             self.title = @chainsetup.name
         end
 
         ###############################################
         # chainsetup got valid/invalid
         ###############################################
-        @chainsetup.signal_connect("notify::valid") do |chainsetup, pspec|
+        destroyable_signal_connect(@chainsetup, "notify::valid") do |chainsetup, pspec|
             w("connect_togglebutton").signal_handler_block(@connect_togglebutton_handler)
             w("connect_togglebutton").sensitive = @chainsetup.valid
             w("connect_togglebutton").signal_handler_unblock(@connect_togglebutton_handler)
@@ -257,7 +254,7 @@ class MainWindow < Gtk::Window
         ###############################################
         # chainsetup was connected/disconnected
         ###############################################
-        @chainsetup.signal_connect("notify::connected") do |chainsetup, pspec|
+        destroyable_signal_connect(@chainsetup, "notify::connected") do |chainsetup, pspec|
             connected = @chainsetup.connected
             valid = @chainsetup.valid
             
@@ -353,7 +350,7 @@ class MainWindow < Gtk::Window
         ###############################################
         # chainsetup's length changed
         ###############################################
-        @chainsetup.signal_connect("notify::length") do |chainsetup, pspec| 
+        destroyable_signal_connect(@chainsetup, "notify::length") do |chainsetup, pspec| 
             w("position_hscale").adjustment =
                 Gtk::Adjustment.new(@chainsetup.position, 0.0, @chainsetup.length, 1.0, POSITION_STEP, 0.0)
             update_position()
@@ -362,10 +359,98 @@ class MainWindow < Gtk::Window
         ###############################################
         # chainsetup's position changed
         ###############################################
-        @chainsetup.signal_connect("notify::position") do |chainsetup, pspec| 
+        destroyable_signal_connect(@chainsetup, "notify::position") do |chainsetup, pspec| 
             update_position()
         end
         
+        ###############################################
+        # operator's visibility changed
+        ###############################################
+        destroyable_signal_connect(@chainsetup, "operator_visibility_changed") do |cs, chain, op_id, show|
+            if @operator_dialogs[chain].nil?
+                @operator_dialogs[chain] = {}
+            end
+            if show
+                hash = @application.chainoperators[@chainsetup.chain_get_operators(chain)[op_id - 1]]
+                @operator_dialogs[chain][op_id] = d = OperatorControlDialog.new(@chainsetup, chain, op_id, hash)
+                d.signal_connect("response") do |dlg, id|
+                    @chainsetup.chain_hide_operator_control(dlg.chain, dlg.operator_id)
+                end
+            else
+                d = @operator_dialogs[chain][op_id]
+                @operator_dialogs[chain].delete(op_id)
+                d.destroy()
+            end
+        end
+
+        ###############################################
+        # chain was renamed
+        ###############################################
+        destroyable_signal_connect(@chainsetup, "chain_renamed") do |cs, old_name, new_name|
+            @operator_dialogs[new_name] = @operator_dialogs[old_name]
+            @operator_dialogs.delete(old_name)
+            @chains_treeview.selection.selected_each do |model, path, iter|
+                @currently_selected_chain = iter[0]
+            end
+        end
+
+        ###############################################
+        # engine status changed
+        ###############################################
+        destroyable_signal_connect(@engine, "notify::status") do |engine, pspec|
+            connected = @chainsetup.connected
+            case engine.status
+                when "running"
+                    w("menu_edit_go_to_start").sensitive =
+                    w("menu_edit_rewind").sensitive =
+                    w("menu_edit_forward").sensitive =
+                    w("menu_edit_set_position").sensitive =
+                    w("menu_engine_stop").sensitive =
+                    w("reset_button").sensitive =
+                    w("rewind_button").sensitive =
+                    w("forward_button").sensitive = 
+                    w("position_button").sensitive =
+                    w("stop_button").sensitive = true && connected
+
+                    w("start_button").sensitive =
+                    w("menu_engine_start").sensitive = false
+
+                    w("position_hscale").sensitive = false
+                else
+                    w("menu_edit_go_to_start").sensitive =
+                    w("menu_edit_rewind").sensitive =
+                    w("menu_edit_forward").sensitive =
+                    w("menu_edit_set_position").sensitive =
+                    w("menu_engine_start").sensitive =
+                    w("reset_button").sensitive =
+                    w("rewind_button").sensitive =
+                    w("forward_button").sensitive = 
+                    w("position_button").sensitive =
+                    w("position_hscale").sensitive =
+                    w("start_button").sensitive = true && connected
+
+                    w("menu_engine_stop").sensitive =
+                    w("stop_button").sensitive = false
+            end
+
+            w("launch_togglebutton").signal_handler_block(@launch_togglebutton_handler)
+            case engine.status
+                when "not started"
+                    w("menu_engine_launch").sensitive = true && connected
+                    w("menu_engine_halt").sensitive = false
+
+                    w("launch_togglebutton").active = false
+                else
+                    w("menu_engine_launch").sensitive = false
+                    w("menu_engine_halt").sensitive = true && connected
+
+                    w("launch_togglebutton").active = true
+            end
+            w("launch_togglebutton").signal_handler_unblock(@launch_togglebutton_handler)
+
+            self.engine_status = engine.status
+        end
+
         ###############################################
         # positon_hscale drawn
         ###############################################
@@ -373,65 +458,6 @@ class MainWindow < Gtk::Window
             @chainsetup.position =  w("position_hscale").value
         end
         
-        ###############################################
-        # engine status changed
-        ###############################################
-        @handlers[@engine].push(
-            @engine.signal_connect("notify::status") do |engine, pspec|
-                connected = @chainsetup.connected
-                case engine.status
-                    when "running"
-                        w("menu_edit_go_to_start").sensitive =
-                        w("menu_edit_rewind").sensitive =
-                        w("menu_edit_forward").sensitive =
-                        w("menu_edit_set_position").sensitive =
-                        w("menu_engine_stop").sensitive =
-                        w("reset_button").sensitive =
-                        w("rewind_button").sensitive =
-                        w("forward_button").sensitive = 
-                        w("position_button").sensitive =
-                        w("stop_button").sensitive = true
-
-                        w("start_button").sensitive =
-                        w("menu_engine_start").sensitive = false
-
-                        w("position_hscale").sensitive = false
-                    else
-                        w("menu_edit_go_to_start").sensitive =
-                        w("menu_edit_rewind").sensitive =
-                        w("menu_edit_forward").sensitive =
-                        w("menu_edit_set_position").sensitive =
-                        w("menu_engine_start").sensitive =
-                        w("reset_button").sensitive =
-                        w("rewind_button").sensitive =
-                        w("forward_button").sensitive = 
-                        w("position_button").sensitive =
-                        w("position_hscale").sensitive =
-                        w("start_button").sensitive = true && connected
-
-                        w("menu_engine_stop").sensitive =
-                        w("stop_button").sensitive = false
-                end
-
-                w("launch_togglebutton").signal_handler_block(@launch_togglebutton_handler)
-                case engine.status
-                    when "not started"
-                        w("menu_engine_launch").sensitive = true && connected
-                        w("menu_engine_halt").sensitive = false
-
-                        w("launch_togglebutton").active = false
-                    else
-                        w("menu_engine_launch").sensitive = false
-                        w("menu_engine_halt").sensitive = true && connected
-
-                        w("launch_togglebutton").active = true
-                end
-                w("launch_togglebutton").signal_handler_unblock(@launch_togglebutton_handler)
-
-                self.engine_status = engine.status
-            end
-        )
-
         ###############################################
         # chains selection changed
         ###############################################
@@ -503,41 +529,6 @@ class MainWindow < Gtk::Window
             w("menu_io_attach").sensitive =
             w("attach_button").sensitive = input_count <= 1 && 
                 output_count <= 1 && input_count + output_count >= 1 && ! connected
-        end
-
-        @chainsetup.signal_connect("operator_visibility_changed") do |cs, chain, op_id, show|
-            if @operator_dialogs[chain].nil?
-                @operator_dialogs[chain] = {}
-            end
-            if show
-                hash = @application.chainoperators[@chainsetup.chain_get_operators(chain)[op_id - 1]]
-                @operator_dialogs[chain][op_id] = d = OperatorControlDialog.new(@chainsetup, chain, op_id, hash)
-                d.signal_connect("response") do |dlg, id|
-                    @chainsetup.chain_hide_operator_control(dlg.chain, dlg.operator_id)
-                end
-            else
-                d = @operator_dialogs[chain][op_id]
-                @operator_dialogs[chain].delete(op_id)
-                d.destroy()
-            end
-        end
-
-        @chainsetup.signal_connect("chain_renamed") do |cs, old_name, new_name|
-            @operator_dialogs[new_name] = @operator_dialogs[old_name]
-            @operator_dialogs.delete(old_name)
-            @chains_treeview.selection.selected_each do |model, path, iter|
-                @currently_selected_chain = iter[0]
-            end
-        end
-
-        # make sure that those signal handlers which are connected to objects
-        # which will stay consistent after a destroy are disconnected
-        signal_connect("destroy") do
-            @handlers.each_pair do |object, handlers|
-                handlers.each do |h|
-                    object.signal_handler_disconnect(h)
-                end
-            end
         end
 
         # init

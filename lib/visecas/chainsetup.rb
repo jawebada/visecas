@@ -17,13 +17,16 @@
 # ---------------------------------------------------------------------------
 
 require "visecas/config"
+require "visecas/destroyable-gtk-object"
 require "visecas/audio-format"
 require "visecas/position-string"
 require "glib2"
 
 module Visecas 
 
-class Chainsetup < GLib::Object
+class Chainsetup < Gtk::Object
+    include DestroyableGtkObject
+
     attr_reader     :name, 
                     :dirty,
                     :chains, 
@@ -627,11 +630,12 @@ class Chainsetup < GLib::Object
     private
 
     def setup_signal_handlers()
-        @application.signal_connect("connected_chainsetup_changed") do |app, connected_name|
+        destroyable_signal_connect(@application, "connected_chainsetup_changed") do |app, connected_name|
             notify("connected")
         end
+
         # engine status changed
-        @engine.signal_connect("notify::status") do |engine, pspec|
+        destroyable_signal_connect(@engine, "notify::status") do |engine, pspec|
             case engine.status
                 when "running"
                     #@running_idle_loop = Gtk.idle_add() do
