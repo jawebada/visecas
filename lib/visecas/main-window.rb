@@ -666,14 +666,15 @@ class MainWindow < Gtk::Window
         d.transient_for = self
         d.audio_format = @chainsetup.audio_format
         handler = d.signal_connect("response") do |dlg, id|
-            if id == AudioObjectsDialog::RESPONSE_ADD_INPUT
-                @chainsetup.audio_format = dlg.audio_format
-                @chainsetup.add_audio_input(dlg.audio_object_string)
-            elsif id == AudioObjectsDialog::RESPONSE_ADD_OUTPUT
-                @chainsetup.audio_format = dlg.audio_format
-                @chainsetup.add_audio_output(dlg.audio_object_string)
-            else
-                dlg.signal_handler_disconnect(handler)
+            case id
+                when AudioObjectsDialog::RESPONSE_ADD_INPUT
+                    @chainsetup.audio_format = dlg.audio_format
+                    @chainsetup.add_audio_input(dlg.audio_object_string)
+                when AudioObjectsDialog::RESPONSE_ADD_OUTPUT
+                    @chainsetup.audio_format = dlg.audio_format
+                    @chainsetup.add_audio_output(dlg.audio_object_string)
+                else
+                    dlg.signal_handler_disconnect(handler)
             end
         end
         d.show_all()
@@ -744,33 +745,32 @@ class MainWindow < Gtk::Window
     end
     
     def action_add_operators()
-        browser = @application.operators_browser
-        browser.title = "Add Operators to #{chainsetup.name}:#{@currently_selected_chain}"
-        browser.set_transient_for(self)
-        add_operator_handler = browser.signal_connect("response") do |dialog, id|
+        b = @application.operators_browser
+        b.title = "Add Operators to #{chainsetup.name}:#{@currently_selected_chain}"
+        b.set_transient_for(self)
+        handler = b.signal_connect("response") do |dlg, id|
             if id == OperatorsBrowser::RESPONSE_ADD
-                type = browser.selected["type"]
-                keyword = browser.selected["keyword"]
+                type = dlg.selected["type"]
+                keyword = dlg.selected["keyword"]
                 if type == "ladspa" and @application.ladspa_plugins[keyword]["name"] =~ /_/
-                    puts "BAD LADSPA PLUGIN"
+                    puts "LADSPA plugin's name appears to contain a ',', Ecasound cannot handle this"
                     d = Gtk::MessageDialog.new(
-                        nil, 
+                        dlg, 
                         Gtk::Dialog::MODAL|Gtk::Dialog::DESTROY_WITH_PARENT,
                         Gtk::MessageDialog::ERROR,
                         Gtk::MessageDialog::BUTTONS_OK,
                         "The name of this LADSPA plugin appears to contain a ','.\nEcasound currently cannot handle this correctly"
                         )
-                    d.signal_connect("response") {|dlg, id| dlg.destroy()}
-                    d.show_all()
+                    d.run()
+                    d.destroy()
                 else
-                    id = @chainsetup.chain_add_operator(@currently_selected_chain, type, keyword) 
-                    browser.present()
+                    @chainsetup.chain_add_operator(@currently_selected_chain, type, keyword) 
                 end
             else
-                browser.signal_handler_disconnect(add_operator_handler)
+                dlg.signal_handler_disconnect(handler)
             end
         end
-        browser.show_all()
+        b.show_all()
     end
 
     def action_remove_selected_operators()
