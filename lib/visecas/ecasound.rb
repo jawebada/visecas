@@ -87,7 +87,7 @@ end
 class ControlInterface
     @@ecasound = ENV['ECASOUND'] || File::which("ecasound")
     
-    if not File::executable?(@@ecasound)
+    if not File::executable?(@@ecasound.to_s)
         raise("ecasound executable not found")
     else
         @@version = VersionString.new(`#{@@ecasound} --version`.split("\n")[0][/\d\.\d\.\d/])
