@@ -1,0 +1,13 @@
+01/16/2003, 0.3.1 (initial release)
+Changes:
+    * fixed packaging error
+01/15/2003, 0.3.0 (never released)
+Features:
+    * start Visecas as you would start Ecasound (all arguments are passed on)
+    * display and control chainsetup's status (valid, connected, looped, etc.)
+    * add, remove, rename, mute, bypass chains
+    * add, remove, attach audio objects
+    * add, remove, control operators
+    * control chainsetup position via hscale
+    * display and control engine status
+    * edit Ecasound's preferences

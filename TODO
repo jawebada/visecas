@@ -1,0 +1,46 @@
+
+Visecas
+-------
+
+Known Bugs
+
+ * once a chainsetup has been closed weird things tend to happen :(
+   (for now simply do not edit more than one chainsetup at a time)
+   
+ * ecs files which cannot correctly be parsed by Ecasound cause a sync timeout
+
+
+Missing Features
+ 
+ * set position dialog
+ 
+ * properties dialog
+ 
+ * audio objects dialog is UGLY!, disable audio objects which are not supported
+ 
+ * handle controllers including editor
+ 
+ * preset editor
+ 
+ * ewf editor
+ 
+ * SuperEcasound features (isn't Visecas.class == SuperEcasound ?)
+ 
+ * [your feature request here]
+
+
+Ecasound Related Problems
+-------------------------
+
+ * s/,/_/ for LADSPA names in cop-list/cop-status
+ 
+ * unique identifier in cop-list/cop-status
+ 
+ * map-ladspa-id-list (Label is not unique without filename) [done in CVS :)]
+ 
+ * c-status sometimes wrong when chainsetup connected (c-muting/c-bypass)
+ 
+ * cs-save does not save operator parameters values for presets
+ 
+ * cs-get-audioformat
+
