@@ -163,12 +163,18 @@ class MainWindow < Gtk::Window
     end
 
     def setup_signal_handlers()
+        @handlers = {}
+        @handlers[@application] = []
+        @handlers[@engine] = []
+
         ###############################################
         # preferences are shown/hidden
         ###############################################
-        @prefs_handler = @application.signal_connect("notify::prefsvisible") do |app, pspec|
-            w("menu_edit_preferences").sensitive = ! @application.prefsvisible
-        end
+        @handlers[@application].push(
+            @application.signal_connect("notify::prefsvisible") do |app, pspec|
+                w("menu_edit_preferences").sensitive = ! @application.prefsvisible
+            end
+        )
         
         ###############################################
         # connect toggled
@@ -369,59 +375,61 @@ class MainWindow < Gtk::Window
         ###############################################
         # engine status changed
         ###############################################
-        @engine_handler = @engine.signal_connect("notify::status") do |engine, pspec|
-            connected = @chainsetup.connected
-            case engine.status
-                when "running"
-                    w("menu_edit_go_to_start").sensitive =
-                    w("menu_edit_rewind").sensitive =
-                    w("menu_edit_forward").sensitive =
-                    w("menu_edit_set_position").sensitive =
-                    w("menu_engine_stop").sensitive =
-                    w("reset_button").sensitive =
-                    w("rewind_button").sensitive =
-                    w("forward_button").sensitive = 
-                    w("position_button").sensitive =
-                    w("stop_button").sensitive = true
+        @handlers[@engine].push(
+            @engine.signal_connect("notify::status") do |engine, pspec|
+                connected = @chainsetup.connected
+                case engine.status
+                    when "running"
+                        w("menu_edit_go_to_start").sensitive =
+                        w("menu_edit_rewind").sensitive =
+                        w("menu_edit_forward").sensitive =
+                        w("menu_edit_set_position").sensitive =
+                        w("menu_engine_stop").sensitive =
+                        w("reset_button").sensitive =
+                        w("rewind_button").sensitive =
+                        w("forward_button").sensitive = 
+                        w("position_button").sensitive =
+                        w("stop_button").sensitive = true
 
-                    w("start_button").sensitive =
-                    w("menu_engine_start").sensitive = false
+                        w("start_button").sensitive =
+                        w("menu_engine_start").sensitive = false
 
-                    w("position_hscale").sensitive = false
-                else
-                    w("menu_edit_go_to_start").sensitive =
-                    w("menu_edit_rewind").sensitive =
-                    w("menu_edit_forward").sensitive =
-                    w("menu_edit_set_position").sensitive =
-                    w("menu_engine_start").sensitive =
-                    w("reset_button").sensitive =
-                    w("rewind_button").sensitive =
-                    w("forward_button").sensitive = 
-                    w("position_button").sensitive =
-                    w("position_hscale").sensitive =
-                    w("start_button").sensitive = true && connected
+                        w("position_hscale").sensitive = false
+                    else
+                        w("menu_edit_go_to_start").sensitive =
+                        w("menu_edit_rewind").sensitive =
+                        w("menu_edit_forward").sensitive =
+                        w("menu_edit_set_position").sensitive =
+                        w("menu_engine_start").sensitive =
+                        w("reset_button").sensitive =
+                        w("rewind_button").sensitive =
+                        w("forward_button").sensitive = 
+                        w("position_button").sensitive =
+                        w("position_hscale").sensitive =
+                        w("start_button").sensitive = true && connected
 
-                    w("menu_engine_stop").sensitive =
-                    w("stop_button").sensitive = false
+                        w("menu_engine_stop").sensitive =
+                        w("stop_button").sensitive = false
+                end
+
+                w("launch_togglebutton").signal_handler_block(@launch_togglebutton_handler)
+                case engine.status
+                    when "not started"
+                        w("menu_engine_launch").sensitive = true && connected
+                        w("menu_engine_halt").sensitive = false
+
+                        w("launch_togglebutton").active = false
+                    else
+                        w("menu_engine_launch").sensitive = false
+                        w("menu_engine_halt").sensitive = true && connected
+
+                        w("launch_togglebutton").active = true
+                end
+                w("launch_togglebutton").signal_handler_unblock(@launch_togglebutton_handler)
+
+                self.engine_status = engine.status
             end
-
-            w("launch_togglebutton").signal_handler_block(@launch_togglebutton_handler)
-            case engine.status
-                when "not started"
-                    w("menu_engine_launch").sensitive = true && connected
-                    w("menu_engine_halt").sensitive = false
-
-                    w("launch_togglebutton").active = false
-                else
-                    w("menu_engine_launch").sensitive = false
-                    w("menu_engine_halt").sensitive = true && connected
-
-                    w("launch_togglebutton").active = true
-            end
-            w("launch_togglebutton").signal_handler_unblock(@launch_togglebutton_handler)
-
-            self.engine_status = engine.status
-        end
+        )
 
         ###############################################
         # chains selection changed
@@ -521,6 +529,16 @@ class MainWindow < Gtk::Window
             end
         end
 
+        # make sure that those signal handlers which are connected to objects
+        # which will stay consistent after a destroy are disconnected
+        signal_connect("destroy") do
+            @handlers.each_pair do |object, handlers|
+                handlers.each do |h|
+                    object.signal_handler_disconnect(h)
+                end
+            end
+        end
+
         # init
         @application.notify("prefsvisible")
         action_sync()
@@ -595,10 +613,6 @@ class MainWindow < Gtk::Window
             if d.run() == Gtk::Dialog::RESPONSE_YES
                 d.destroy()
                 if action_save()
-                    # XXX
-                    # is this a ruby-gnome2 bug?
-                    @engine.signal_handler_disconnect(@engine_handler)
-                    @application.signal_handler_disconnect(@prefs_handler)
                     @application.close_chainsetup(@chainsetup)
                     return true
                 else
@@ -608,9 +622,6 @@ class MainWindow < Gtk::Window
                 d.destroy()
             end
         end
-        # see above
-        @engine.signal_handler_disconnect(@engine_handler)
-        @application.signal_handler_disconnect(@prefs_handler)
         @application.close_chainsetup(@chainsetup)
         true
     end
