@@ -540,10 +540,9 @@ class MainWindow < Gtk::Window
         fs.select_multiple = true
         fs.transient_for = self
         # fs.complete(".ecs")
-        fs.signal_connect("response") do |dlg, id|
-            @application.open_chainsetups(fs.selections) if id == Gtk::Dialog::RESPONSE_OK
+        if fs.run() == Gtk::Dialog::RESPONSE_OK
+            @application.open_chainsetups(fs.selections)
         end
-        fs.show_all()
     end
 
     def action_save()
@@ -561,10 +560,8 @@ class MainWindow < Gtk::Window
         fs.transient_for = self
         if fs.run() == Gtk::Dialog::RESPONSE_OK
             @chainsetup.save_as(fs.filename)
-            fs.destroy()
             return true
         else
-            fs.destroy()
             return false
         end
     end
