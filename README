@@ -65,7 +65,7 @@ Make sure you have everything above installed before you move to:
 * Ruby-Gnome2 >= 0.8.0
 http://ruby-gnome2.sourceforge.jp/
 There are different packages:
-ruby-gnome2-all comes all inclusive but ruby-gtk2 should suffice.
+You will need the ruby-gnome2-all package which includes libglade2 bindings.
 
 And of course last but certainly not least:
 

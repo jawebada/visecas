@@ -41,3 +41,5 @@ Ecasound Related Problems
  
  * cs-get-audioformat
 
+ * loop devices include a ',' in their names, how to parse ai/o-list?
+
