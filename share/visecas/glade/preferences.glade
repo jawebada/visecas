@@ -1318,6 +1318,7 @@
 				      <child>
 					<widget class="GtkSpinButton" id="double_buffer_size">
 					  <property name="visible">True</property>
+					  <property name="sensitive">False</property>
 					  <property name="can_focus">True</property>
 					  <property name="climb_rate">1</property>
 					  <property name="digits">0</property>
