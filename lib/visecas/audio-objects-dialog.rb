@@ -55,10 +55,14 @@ class AudioObjectsDialog < Gtk::FileSelection
         prepare_audio_format_box()
 
         signal_connect("response") do |dlg, id|
-            if @notebook.page == 0
-                @audio_object_string = self.filename
+            if [RESPONSE_ADD_INPUT, RESPONSE_ADD_OUTPUT].include?(id)
+                if @notebook.page == 0
+                    @audio_object_string = self.filename
+                else
+                    @audio_object_string = get_other_audio_object_string()
+                end
             else
-                @audio_object_string = get_other_audio_object_string()
+                @audio_object_string = nil
             end
         end
 

@@ -689,7 +689,6 @@ class Chainsetup < GLib::Object
     end
 
     def append_audio_object(io, path)
-        puts "added #{io}: #{path}"
         iter =  io == "input" ? 
             @audio_objects.insert(command("ai-list").size - 1) :
             @audio_objects.append()
