@@ -4,9 +4,6 @@ Visecas
 
 Known Bugs
 
- * once a chainsetup has been closed weird things tend to happen :(
-   (for now simply do not edit more than one chainsetup at a time)
-   
  * ecs files which cannot correctly be parsed by Ecasound cause a sync timeout
 
 

@@ -132,7 +132,7 @@ class Application < GLib::Object
         @eci = Ecasound::ControlInterface.new(argv.join(" "))
         
         @cs_windows = {}
-        command("cs-list").each {|cs| push_chainsetup(cs)}
+        command("cs-list").each {|cs| display_chainsetup(cs)}
 
         @engine.start_timeout()
     end
@@ -176,7 +176,7 @@ EOS
             end
         end
         command("cs-add #{name}")
-        push_chainsetup(name)
+        display_chainsetup(command("cs-list")[-1])
     end
 
     def open_chainsetups(paths)
@@ -184,7 +184,7 @@ EOS
             old_size = command("cs-list").size
             command("cs-load #{p}")
             if command("cs-list").size == old_size + 1
-                cs = push_chainsetup(command("cs-list")[-1])
+                cs = display_chainsetup(command("cs-list")[-1])
                 cs.filename = p
             else
                 puts "failed to open chainsetup #{p}"
@@ -288,17 +288,10 @@ EOS
         end
     end
 
-    def push_chainsetup(name)
+    def display_chainsetup(name)
         puts "opening '#{name}'..."
         cs = Chainsetup.new(self, name)
         w = MainWindow.new(self, cs)
-        w.signal_connect("delete_event") do |window, event|
-            window.chainsetup.remove
-            @cs_windows.delete(window)
-            window.destroy
-            Gtk.main_quit() if @cs_windows.size == 0
-            true
-        end
         @cs_windows[cs] = w
         w.show_all()
         cs

@@ -40,7 +40,7 @@ class MainWindow < Gtk::Window
             if private_methods.include?(handler)
                 method(handler) 
             else
-                puts handler
+                puts "signal handler '#{handler}' missing!"
             end
         end
         self.add(w("child"))
@@ -166,10 +166,10 @@ class MainWindow < Gtk::Window
         ###############################################
         # preferences are shown/hidden
         ###############################################
-
-        @application.signal_connect("notify::prefsvisible") do |app, pspec|
+        @prefs_handler = @application.signal_connect("notify::prefsvisible") do |app, pspec|
             w("menu_edit_preferences").sensitive = ! @application.prefsvisible
         end
+        
         ###############################################
         # connect toggled
         ###############################################
@@ -369,7 +369,7 @@ class MainWindow < Gtk::Window
         ###############################################
         # engine status changed
         ###############################################
-        @engine.signal_connect("notify::status") do |engine, pspec|
+        @engine_handler = @engine.signal_connect("notify::status") do |engine, pspec|
             connected = @chainsetup.connected
             case engine.status
                 when "running"
@@ -598,6 +598,10 @@ class MainWindow < Gtk::Window
             if d.run() == Gtk::Dialog::RESPONSE_YES
                 d.destroy()
                 if action_save()
+                    # XXX
+                    # is this a ruby-gnome2 bug?
+                    @engine.signal_handler_disconnect(@engine_handler)
+                    @application.signal_handler_disconnect(@prefs_handler)
                     @application.close_chainsetup(@chainsetup)
                     return true
                 else
@@ -607,6 +611,9 @@ class MainWindow < Gtk::Window
                 d.destroy()
             end
         end
+        # see above
+        @engine.signal_handler_disconnect(@engine_handler)
+        @application.signal_handler_disconnect(@prefs_handler)
         @application.close_chainsetup(@chainsetup)
         true
     end

@@ -91,7 +91,7 @@ class PreferencesDialog < Gtk::Dialog
 
     def configure_audio_format(*args)
         d = AudioFormatDialog.new(@preferences["default-audio-format"])
-        d.title = "Configure Default Audio Format"
+        d.title = "Configure Default Audioformat"
         d.transient_for = @self
         d.signal_connect("response") do |dlg, id|
             @preferences["default-audio-format"] = dlg.format

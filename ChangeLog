@@ -1,83 +1,84 @@
-2004-01-16  jawebada  <jawebada@visecas.sourceforge.net>
+2004-01-16  jawebada  <jan.weil@web.de>
 
-	* .NEWS.swp: removed vim's swap file :(
+    * ChangeLog: ChangeLog added
 
-	* share/visecas/glade/preferences.glade, share/visecas/glade/stock_media-pause.png, share/visecas/glade/stock_media-play.png, share/visecas/glade/stock_media-prev.png, share/visecas/glade/stock_media-rew.png, share/visecas/glade/stock_media-stop.png:
-	Initial import.
+    * .NEWS.swp: removed vim's swap file :(
 
-	* share/visecas/glade/preferences.glade, share/visecas/glade/stock_media-pause.png, share/visecas/glade/stock_media-play.png, share/visecas/glade/stock_media-prev.png, share/visecas/glade/stock_media-rew.png, share/visecas/glade/stock_media-stop.png:
-	New file.
+    * share/visecas/glade/preferences.glade, share/visecas/glade/stock_media-pause.png, share/visecas/glade/stock_media-play.png, share/visecas/glade/stock_media-prev.png, share/visecas/glade/stock_media-rew.png, share/visecas/glade/stock_media-stop.png:
+    Initial import.
 
-	* share/visecas/glade/operators-browser.glade:
-	Initial import.
+    * share/visecas/glade/preferences.glade, share/visecas/glade/stock_media-pause.png, share/visecas/glade/stock_media-play.png, share/visecas/glade/stock_media-prev.png, share/visecas/glade/stock_media-rew.png, share/visecas/glade/stock_media-stop.png:
+    New file.
 
-	* share/visecas/glade/operators-browser.glade:
-	New file.
+    * share/visecas/glade/operators-browser.glade:
+    Initial import.
 
-	* share/visecas/glade/main.glade:
-	Initial import.
+    * share/visecas/glade/operators-browser.glade:
+    New file.
 
-	* share/visecas/glade/main.glade: New file.
+    * share/visecas/glade/main.glade: Initial import.
 
-	* share/visecas/glade/chainsetup-properties.glade:
-	Initial import.
+    * share/visecas/glade/main.glade: New file.
 
-	* share/visecas/glade/chainsetup-properties.glade:
-	New file.
+    * share/visecas/glade/chainsetup-properties.glade:
+    Initial import.
 
-	* share/visecas/glade/audioformat-editor.glade, share/visecas/glade/stock_media-fwd.png:
-	Initial import.
+    * share/visecas/glade/chainsetup-properties.glade:
+    New file.
 
-	* share/visecas/glade/audioformat-editor.glade, share/visecas/glade/stock_media-fwd.png:
-	New file.
+    * share/visecas/glade/audioformat-editor.glade, share/visecas/glade/stock_media-fwd.png:
+    Initial import.
 
-	* share/visecas/glade/audio-objects-dialog.glade:
-	Initial import.
+    * share/visecas/glade/audioformat-editor.glade, share/visecas/glade/stock_media-fwd.png:
+    New file.
 
-	* share/visecas/glade/audio-objects-dialog.glade:
-	New file.
+    * share/visecas/glade/audio-objects-dialog.glade:
+    Initial import.
 
-	* lib/visecas/audio-objects-dialog.rb, lib/visecas/pre-config.rb, share/visecas/glade/about-dialog.glade:
-	Initial import.
+    * share/visecas/glade/audio-objects-dialog.glade:
+    New file.
 
-	* lib/visecas/audio-objects-dialog.rb, lib/visecas/pre-config.rb, share/visecas/glade/about-dialog.glade:
-	New file.
+    * lib/visecas/audio-objects-dialog.rb, lib/visecas/pre-config.rb, share/visecas/glade/about-dialog.glade:
+    Initial import.
 
-	* lib/visecas/application.rb, lib/visecas/audio-format-dialog.rb, lib/visecas/audio-format.rb, lib/visecas/operator-control-dialog.rb, lib/visecas/position-string.rb, lib/visecas/preferences-dialog.rb, lib/visecas/preferences.rb:
-	Initial import.
+    * lib/visecas/audio-objects-dialog.rb, lib/visecas/pre-config.rb, share/visecas/glade/about-dialog.glade:
+    New file.
 
-	* lib/visecas/application.rb, lib/visecas/audio-format-dialog.rb, lib/visecas/audio-format.rb, lib/visecas/operator-control-dialog.rb, lib/visecas/position-string.rb, lib/visecas/preferences-dialog.rb, lib/visecas/preferences.rb:
-	New file.
+    * lib/visecas/application.rb, lib/visecas/audio-format-dialog.rb, lib/visecas/audio-format.rb, lib/visecas/operator-control-dialog.rb, lib/visecas/position-string.rb, lib/visecas/preferences-dialog.rb, lib/visecas/preferences.rb:
+    Initial import.
 
-	* lib/visecas/main-window.rb, lib/visecas/operators-browser.rb:
-	Initial import.
+    * lib/visecas/application.rb, lib/visecas/audio-format-dialog.rb, lib/visecas/audio-format.rb, lib/visecas/operator-control-dialog.rb, lib/visecas/position-string.rb, lib/visecas/preferences-dialog.rb, lib/visecas/preferences.rb:
+    New file.
 
-	* lib/visecas/main-window.rb, lib/visecas/operators-browser.rb:
-	New file.
+    * lib/visecas/main-window.rb, lib/visecas/operators-browser.rb:
+    Initial import.
 
-	* lib/visecas/config.rb, lib/visecas/ecasound.rb, lib/visecas/engine.rb:
-	Initial import.
+    * lib/visecas/main-window.rb, lib/visecas/operators-browser.rb:
+    New file.
 
-	* lib/visecas/config.rb, lib/visecas/ecasound.rb, lib/visecas/engine.rb:
-	New file.
+    * lib/visecas/config.rb, lib/visecas/ecasound.rb, lib/visecas/engine.rb:
+    Initial import.
 
-	* lib/visecas/chainsetup.rb: Initial import.
+    * lib/visecas/config.rb, lib/visecas/ecasound.rb, lib/visecas/engine.rb:
+    New file.
 
-	* lib/visecas/chainsetup.rb: New file.
+    * lib/visecas/chainsetup.rb: Initial import.
 
-	* bin/pre-config.rb, bin/visecas, lib/visecas/about-dialog.rb, NEWS, .NEWS.swp, setup.rb:
-	Initial import.
+    * lib/visecas/chainsetup.rb: New file.
 
-	* bin/pre-config.rb, bin/visecas, lib/visecas/about-dialog.rb, NEWS, .NEWS.swp, setup.rb:
-	New file.
+    * bin/pre-config.rb, bin/visecas, lib/visecas/about-dialog.rb, NEWS, .NEWS.swp, setup.rb:
+    Initial import.
 
-	* COPYING, INSTALL, pre-config.rb, README, TODO:
-	Initial import.
+    * bin/pre-config.rb, bin/visecas, lib/visecas/about-dialog.rb, NEWS, .NEWS.swp, setup.rb:
+    New file.
 
-	* COPYING, INSTALL, pre-config.rb, README, TODO:
-	New file.
+    * COPYING, INSTALL, pre-config.rb, README, TODO:
+    Initial import.
 
-	* AUTHORS: Initial import.
+    * COPYING, INSTALL, pre-config.rb, README, TODO:
+    New file.
 
-	* AUTHORS: New file.
+    * AUTHORS: Initial import.
+
+    * AUTHORS: New file.
 

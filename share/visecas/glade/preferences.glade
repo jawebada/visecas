@@ -314,7 +314,7 @@
 			  <child>
 			    <widget class="GtkLabel" id="label7">
 			      <property name="visible">True</property>
-			      <property name="label" translatable="yes">&lt;b&gt;Default Audio Format&lt;/b&gt;</property>
+			      <property name="label" translatable="yes">&lt;b&gt;Default Audioformat&lt;/b&gt;</property>
 			      <property name="use_underline">False</property>
 			      <property name="use_markup">True</property>
 			      <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -418,7 +418,7 @@
 			      <child>
 				<widget class="GtkLabel" id="label_devices2">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">Sample resolution:</property>
+				  <property name="label" translatable="yes">Channels:</property>
 				  <property name="use_underline">False</property>
 				  <property name="use_markup">False</property>
 				  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -442,7 +442,7 @@
 			      <child>
 				<widget class="GtkLabel" id="label83">
 				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">Channels:</property>
+				  <property name="label" translatable="yes">Sample format:</property>
 				  <property name="use_underline">False</property>
 				  <property name="use_markup">False</property>
 				  <property name="justify">GTK_JUSTIFY_LEFT</property>
@@ -512,7 +512,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkLabel" id="sample_format_label">
+				<widget class="GtkLabel" id="channels_label">
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes">label86</property>
 				  <property name="use_underline">False</property>
@@ -536,7 +536,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkLabel" id="channels_label">
+				<widget class="GtkLabel" id="sample_format_label">
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes">label87</property>
 				  <property name="use_underline">False</property>

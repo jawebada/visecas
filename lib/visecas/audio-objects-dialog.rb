@@ -151,7 +151,7 @@ class AudioObjectsDialog < Gtk::FileSelection
 
     def configure_audio_format()
         d = AudioFormatDialog.new(@format)
-        d.title = "Configure Audio Format"
+        d.title = "Configure Audioformat"
         d.transient_for = self
         d.run()
         @format = d.format

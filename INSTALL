@@ -15,11 +15,11 @@ Files will be installed to
 
 prefix/bin 					(visecas)
 prefix/lib/ruby/site_ruby/RUBY.VERSION/visecas 	(lib/visecas)
-prefix/share/visecas				(data/visecas)
+prefix/share/visecas				(share/visecas)
 
 NOTE however that the configuration step modifies some files. After that you
 won't be able to run visecas from the source tree.
 
-setup.rb does NOT provide an 'uninstall' target!
+'setup.rb' does NOT provide an 'uninstall' target!
 You can however use a tool like 'checkinstall' to generate a dummy package for
 your distribution.
