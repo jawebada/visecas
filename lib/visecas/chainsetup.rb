@@ -493,6 +493,9 @@ class Chainsetup < Gtk::Object
     end
 
     def chain_remove_operators(chain, op_id_ary)
+        chain_get_operators(chain).size.downto(1) do |i|
+            chain_hide_operator_control(chain, i)
+        end
         command("c-select #{chain}")
         op_id_ary.reverse_each do |id| 
             #puts "removing op #{id} from #{chain}"
