@@ -48,6 +48,7 @@ class MainWindow < Gtk::Window
         prepare_treeviews()
         setup_signal_handlers()
         self.signal_connect("delete_event") {action_close(); true}
+        w("menu_help_userguide").sensitive = false
     end
 
     def sync()
@@ -557,7 +558,7 @@ class MainWindow < Gtk::Window
         fs.title = "Open a Chainsetup..."
         fs.select_multiple = true
         fs.transient_for = self
-        # fs.complete(".ecs")
+        fs.complete("*.ecs")
         if fs.run() == Gtk::Dialog::RESPONSE_OK
             @application.open_chainsetups(fs.selections)
         end
@@ -576,6 +577,7 @@ class MainWindow < Gtk::Window
         fs = @application.fileselection
         fs.title = "Save #{@chainsetup.name}..."
         fs.transient_for = self
+        fs.complete(@chainsetup.filename) if @chainsetup.filename
         if fs.run() == Gtk::Dialog::RESPONSE_OK
             @chainsetup.save_as(fs.filename)
             return true
