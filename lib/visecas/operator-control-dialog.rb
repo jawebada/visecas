@@ -145,8 +145,8 @@ class OperatorControlDialog < Gtk::Dialog
             # XXX this does not what I thought it would do
             # how do I make the scw scroll in tab columns width?
             #scw.hadjustment = vp.hadjustment = Gtk::Adjustment.new(0, 0, width, col_width, col_width, 0)
-            #scw.hadjustment.step_increment = 
-            #scw.hadjustment.page_increment = col_width
+            scw.hadjustment.step_increment = 
+            scw.hadjustment.page_increment = col_width
         elsif @has_hscale
             # make window width resizable up to 600 px (vscale)
             width, height = self.size
