@@ -13,7 +13,7 @@ Missing Features
  
  * properties dialog
  
- * audio objects dialog is UGLY!, disable audio objects which are not supported
+ * disable audio objects which are not supported in audio objects dialog
  
  * handle controllers including editor
  
