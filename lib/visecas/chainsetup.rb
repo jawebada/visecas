@@ -355,6 +355,24 @@ class Chainsetup < GLib::Object
         notify("position")
     end
 
+    def audio_format()
+        random = ""
+        loop do
+            random = rand().to_s + ".wav"
+            random.sub!(/\./, "_")
+            break if not command("ao-list").include?(random)
+        end
+        command("ao-add #{random}")
+        command("ao-select #{random}")
+        format = command("ao-get-format")
+        command("ao-remove #{random}")
+        format
+    end
+
+    def audio_format=(audio_format_string)
+        command("cs-set-audio-format #{audio_format_string}")
+    end
+
     ###############################################
     # chains methods
     ###############################################
@@ -522,35 +540,15 @@ class Chainsetup < GLib::Object
     end
 
     ###############################################
-    # generic audio methods
-    ###############################################
-
-    def audio_format()
-        random = ""
-        loop do
-            random = rand().to_s + ".wav"
-            random.sub!(/\./, "_")
-            break if not command("ao-list").include?(random)
-        end
-        command("ao-add #{random}")
-        command("ao-select #{random}")
-        format = command("ao-get-format")
-        command("ao-remove #{random}")
-        format
-    end
-
-    def audio_format=(audio_format_string)
-        command("cs-set-audio-format #{audio_format_string}")
-    end
-
-    ###############################################
     # audio inputs methods
     ###############################################
 
     def add_audio_input(path)
         old_valid = valid
+        command("c-deselect #{command("c-list").join(",")}")
         command("ai-add #{path}")
-        append_audio_object("input", path)
+        name = command("ai-list")[-1]
+        append_audio_object("input", name)
         notify("valid") if old_valid != valid
         self.dirty = true
     end
@@ -587,8 +585,10 @@ class Chainsetup < GLib::Object
 
     def add_audio_output(path)
         old_valid = valid
+        command("c-deselect #{command("c-list").join(",")}")
         command("ao-add #{path}")
-        append_audio_object("output", path)
+        name = command("ao-list")[-1]
+        append_audio_object("output", name)
         notify("valid") if old_valid != valid
         self.dirty = true
     end
@@ -730,31 +730,33 @@ class Chainsetup < GLib::Object
         ret
     end
 
-    def append_audio_object(io, path)
+    def append_audio_object(io, name)
+        return false if not name
         iter =  io == "input" ? 
             @audio_objects.insert(command("ai-list").size - 1) :
             @audio_objects.append()
         iter[0] = io
-        iter[1] = path
-        iter[2] = audio_objects_status()[io+path]["type"]
+        iter[1] = name
+        status = audio_objects_status()[io+name] || {}
+        iter[2] = status["type"] || "unknown"
         iter[3] = PositionString.new(0)
         iter[4] = PositionString.new(0)
         format = io == "input" ? 
-            audio_input_format(path) :
-            audio_output_format(path)
+            audio_input_format(name) :
+            audio_output_format(name)
         iter[5] = AudioFormatString.new(format).human_readable
-        update_audio_object(io, path)
+        update_audio_object(io, name)
     end
 
-    def update_audio_object(io, path)
+    def update_audio_object(io, name)
         if io == "input"
-            iter = @audio_objects.get_iter(command("ai-list").index(path).to_s)
-            iter[3] = PositionString.new(audio_input_position(path))
-            iter[4] = PositionString.new(audio_input_length(path))
+            iter = @audio_objects.get_iter(command("ai-list").index(name).to_s)
+            iter[3] = PositionString.new(audio_input_position(name))
+            iter[4] = PositionString.new(audio_input_length(name))
         else
-            iter = @audio_objects.get_iter((command("ai-list").length + command("ao-list").index(path)).to_s)
-            iter[3] = PositionString.new(audio_output_position(path))
-            iter[4] = PositionString.new(audio_output_length(path))
+            iter = @audio_objects.get_iter((command("ai-list").length + command("ao-list").index(name)).to_s)
+            iter[3] = PositionString.new(audio_output_position(name))
+            iter[4] = PositionString.new(audio_output_length(name))
         end
     end
     
@@ -772,16 +774,16 @@ class Chainsetup < GLib::Object
             io = $1.downcase!
             id = $2
             type = $4
-            path = $3.split(",")[0]
+            name = $3.split(",")[0]
             #puts "io " + io
             #puts "id " + id
-            #puts "path " + path
+            #puts "name " + name
             #puts "type " + type
             string =~ /connected to chains "(\S*)":/
             chains = $1.split(",") or []
             #puts "chains" + chains.to_s
             #puts
-            ret[io+path] = {"io" => io, "path" => path, "id" => id, "type" => type, "chains" => chains}
+            ret[io+name] = {"io" => io, "path" => name, "id" => id, "type" => type, "chains" => chains}
         end
         ret
     end
