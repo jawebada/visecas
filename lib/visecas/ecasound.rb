@@ -165,7 +165,7 @@ class ControlInterface
     def read()
         buffer = ""
         while select([@ecapipe], nil, nil, 0)
-            buffer += @ecapipe.read(1) or ""
+            buffer += @ecapipe.read(1) || ""
         end
         return buffer
     end
