@@ -19,15 +19,17 @@
 
 module Visecas
 
+VISECAS_DIR = "../bin" if not const_defined?("VISECAS_DIR")
+
 # this is set by pre-config.rb
-PREFIX = File.join(VISECAS_DIR, "..")
+PREFIX = File.join(VISECAS_DIR, "..") 
 
 SHARE_DIR = File::join(PREFIX, "share")
 GLADE_DIR = File::join(SHARE_DIR, "visecas/glade")
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 3
-VERSION_MICRO = 2
+VERSION_MICRO = 5
 VERSION = "#{VERSION_MAJOR}.#{VERSION_MINOR}.#{VERSION_MICRO}"
 
 NAME = "Visecas"
