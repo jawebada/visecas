@@ -23,7 +23,7 @@ require "libglade2"
 
 module Visecas
 
-class AudioObjectsDialog < Gtk::FileSelection
+class AudioObjectsDialog < Gtk::Dialog
     attr_reader     :audio_object_string
 
     RESPONSE_CLOSE = 0
@@ -33,45 +33,37 @@ class AudioObjectsDialog < Gtk::FileSelection
     def initialize()
         super()
         
-        self.show_fileops = 
+        self.resizable = false
         self.has_separator = false
-        self.border_width = 0
+        self.border_width = 6
+
+        @glade = GladeXML.new(File::join(GLADE_DIR, "audio-objects-dialog.glade"), "child") {|h| method(h)}
 
         vbox.spacing = 12
-
-        # this produces warnings
-        ok_button.destroy()
-        cancel_button.destroy()
+        vbox.add(w("child"))
 
         add_button(Gtk::Stock::CLOSE, RESPONSE_CLOSE)
         add_button("Add as Input", RESPONSE_ADD_INPUT)
         add_button("Add as Output", RESPONSE_ADD_OUTPUT)
 
-        @notebook = Gtk::Notebook.new()
-        # @notebook.homogeneous = true
         prepare_file_page()
-        vbox.pack_start(@notebook)
-        prepare_others_page()
-        prepare_audio_format_box()
+        prepare_devices_page()
+        prepare_jack_page()
+        prepare_misc_page()
 
-        # XXX ??? row-activated leads to action_new ???
-        file_list.signal_connect("row-activated") do |tv, path, column|
-            signal_emit("response", RESPONSE_ADD_INPUT)
-            true
-        end
+        geometry = Gdk::Geometry.new()
+        geometry.max_height = 800
+        geometry.max_width = 0
+        self.set_geometry_hints(vbox, geometry, Gdk::Window::HINT_MAX_SIZE)
+
         signal_connect("response") do |dlg, id|
             if [RESPONSE_ADD_INPUT, RESPONSE_ADD_OUTPUT].include?(id)
-                if @notebook.page == 0
-                    @audio_object_string = self.filename
-                else
-                    @audio_object_string = get_other_audio_object_string()
-                end
-            else
-                @audio_object_string = nil
+                @audio_object_string = get_audio_object_string()
             end
         end
 
-        @notebook.prev_page()
+        # Ecasound 'bug' loopback name contains an ','
+        w("loopback_vbox").sensitive = false
     end
 
     def audio_format=(format)
@@ -86,76 +78,125 @@ class AudioObjectsDialog < Gtk::FileSelection
     private
 
     def w(str)
-        @glade.get_widget(str)
+        @glade.get_widget(str) || raise("glade: #{str} not found")
     end
 
     def prepare_file_page()
-        box = Gtk::VBox.new()
-        l = Gtk::Label.new()
-        l.markup = "<b>File</b>"
-        @notebook.append_page(box, l)
-        box.border_width = 6
-        i = 0
-        # put everything but the button box into first notebook page
-        loop do
-            c = self.vbox.children[0]
-            break if c.class == Gtk::HButtonBox
-            h = Gtk::HBox.new()
-            c.reparent(h)
-            if i == 1
-                box.pack_start(h, true, true)
+        @dir_view = w("dir_treeview")
+        sel = @dir_view.selection
+        sel.mode = Gtk::SELECTION_SINGLE
+        sel.signal_connect("changed") do |sel|
+            if sel.selected
+                entry = sel.selected[1]
+                w("file_entry").text = entry if test(?f, File.join(@dir, entry))
             else
-                box.pack_start(h, false, false)
+                w("file_entry").text = ""
             end
-            i += 1
         end
+        @dir_menu = w("dir_optionmenu")
+        @dir_view.append_column(Gtk::TreeViewColumn.new("Path", Gtk::CellRendererText.new(), :text => 1))
+        @dir_store = Gtk::ListStore.new(String, String)
+        @dir_store.set_sort_func(0) do |e1, e2|
+            if test(?d, e1[0])
+                if test(?d, e2[0])
+                    ret = e1[0] <=> e2[0]
+                else
+                    ret = -1
+                end
+            else
+                if test(?d, e2[0])
+                    ret = 1
+                else
+                    ret = e1[0] <=> e2[0]
+                end
+            end
+            ret
+        end
+        @dir_store.set_sort_column_id(0)
+        @dir_view.model = @dir_store
+        @dir_menu_handler = @dir_menu.signal_connect("changed") do |optm| 
+            display_directory(@parent_dirs[optm.history])
+        end
+        @dir_view.signal_connect("row-activated") do |view, path, column|
+            entry = view.model.get_iter(path)[0]
+            if test(?d, entry)
+                display_directory(entry)
+            elsif test(?f, entry)
+                signal_emit("response", RESPONSE_ADD_INPUT)
+            end
+        end
+        display_directory(`pwd`.chomp)
     end
 
-    def prepare_others_page()
-        @glade = GladeXML.new(File::join(GLADE_DIR, "audio-objects-dialog.glade"), "others_vbox") {|h| method(h)}
-        
+    def prepare_devices_page()
         size_group = Gtk::SizeGroup.new(1)
-        [   "oss_radiobutton", 
-            "alsa_device_radiobutton", 
+        [   "alsa_device_radiobutton", 
             "alsa_hardware_radiobutton", 
-            "alsa_plugin_radiobutton",
-            "jack_alsa_radiobutton",
-            "jack_client_radiobutton",
-            "jack_generic_radiobutton",
-            "loopback_radiobutton",
-            "generic_radiobutton"
+            "oss_radiobutton", 
+            "alsa_plugin_radiobutton"
         ].each do |str|
             size_group.add_widget(w(str))
         end
 
         menu = Gtk::Menu.new()
         @oss_devices = []
-
         Dir["/dev/dsp*"].each do |dev|
             @oss_devices.push(dev)
             menu.append(Gtk::MenuItem.new(dev))
         end
-
+        menu.show_all()
         w("oss_optionmenu").menu = menu
-
         if @oss_devices.size == 0
             w("oss_vbox").sensitive = false
         end
-
-        l = Gtk::Label.new()
-        l.markup = "<b>Others</b>"
-        box = w("others_vbox")
-        box.border_width = 12
-        @notebook.append_page(box, l)
     end
 
-    def prepare_audio_format_box()
-        glade = GladeXML.new(File::join(GLADE_DIR, "audio-objects-dialog.glade"), "audioformat_vbox") {|h| method(h)}
-        @sample_rate_label = glade.get_widget("sample_rate_label")
-        @sample_resolution_label = glade.get_widget("sample_resolution_label")
-        @channels_label = glade.get_widget("channels_label")
-        @interleaved_label = glade.get_widget("interleaved_label")
-        vbox.pack_start(glade.get_widget("audioformat_vbox"), false, false)
+    def prepare_jack_page()
+        size_group = Gtk::SizeGroup.new(1)
+        [   "jack_alsa_radiobutton", 
+            "jack_client_radiobutton",
+            "jack_generic_radiobutton"
+        ].each do |str|
+            size_group.add_widget(w(str))
+        end
+    end
+
+    def prepare_misc_page()
+        size_group = Gtk::SizeGroup.new(1)
+        [   "misc_loopback_radiobutton", 
+            "misc_generic_radiobutton"
+        ].each do |str|
+            size_group.add_widget(w(str))
+        end
+    end
+
+    def display_directory(dir)
+        @dir_store.clear()
+        @dir = File.expand_path(dir)
+        d = Dir.new(@dir)
+        d.each do |entry|
+            next if entry =~ /^\./ and not entry == ".."
+            path = File.expand_path(File.join(@dir, entry))
+            iter = @dir_store.append()
+            iter[0] = path
+            entry += "/" if File.stat(path).directory? and entry != ".."
+            iter[1] = entry
+        end
+        @dir_menu.signal_handler_block(@dir_menu_handler)
+        menu = Gtk::Menu.new()
+        path = ""
+        i = -1
+        @parent_dirs = []
+        @dir.split("/").each do |p|
+            path += p + "/"
+            @parent_dirs.push(path)
+            menu.append(Gtk::MenuItem.new(path))
+            i += 1
+        end
+        menu.show_all()
+        @dir_menu.menu = menu
+        @dir_menu.history = i
+        @dir_menu.signal_handler_unblock(@dir_menu_handler)
     end
 
     def configure_audio_format()
@@ -170,39 +211,49 @@ class AudioObjectsDialog < Gtk::FileSelection
 
     def display_audio_format()
         string = AudioFormatString.new(@format)
-        @sample_rate_label.text = string.human_sample_rate
-        @sample_resolution_label.text = string.human_sample_format
-        @channels_label.text = string.human_channels
-        @interleaved_label.text = string.interleaved? ? "Yes" : "No"
+        w("sample_rate_label").text = string.human_sample_rate
+        w("sample_format_label").text = string.human_sample_format
+        w("channels_label").text = string.human_channels
+        w("interleaved_label").text = string.interleaved? ? "Yes" : "No"
     end
 
-    def get_other_audio_object_string()
-        if w("oss_radiobutton").active?
-            @audio_object_string = @oss_devices[w("oss_optionmenu").history]
-        elsif w("alsa_device_radiobutton").active?
-            @audio_object_string = "alsa," + w("alsa_dev_entry").text
-        elsif w("alsa_hardware_radiobutton").active?
-            @audio_object_string = "alsahw," + 
-                Integer(w("alsa_hw_card_spinbutton").value).to_s + "," +
-                Integer(w("alsa_hw_dev_spinbutton").value).to_s + "," +
-                Integer(w("alsa_hw_subdev_spinbutton").value).to_s
-        elsif w("alsa_plugin_radiobutton").active?
-            @audio_object_string = "alsaplugin," +
-                Integer(w("alsa_plug_card_spinbutton").value).to_s + "," +
-                Integer(w("alsa_plug_dev_spinbutton").value).to_s + "," +
-                Integer(w("alsa_plug_subdev_spinbutton").value).to_s
-        elsif w("jack_alsa_radiobutton").active?
-            @audio_object_string = "jack_alsa"
-        elsif w("jack_client_radiobutton").active?
-            @audio_object_string = "jack_auto," + w("jack_client_entry").text
-        elsif w("jack_generic_radiobutton").active?
-            @audio_object_string = w("jack_generic_entry").text == "" ?
-                "jack" : "jack_generic," + w("jack_generic_entry").text
-        elsif w("loopback_radiobutton").active?
-            @audio_object_string = "loop," + Integer(w("loop_id_spinbutton").value).to_s
-        else
-            @audio_object_string = w("generic_entry").text
+    def get_audio_object_string()
+        case w("notebook").page
+            when 0
+                ret = File.join(@dir, w("file_entry").text)
+            when 1
+                if w("alsa_device_radiobutton").active?
+                    ret = "alsa," + w("alsa_device_entry").text
+                elsif w("alsa_hardware_radiobutton").active?
+                    ret = "alsahw," + 
+                        Integer(w("alsa_hardware_card_spinbutton").value).to_s + "," +
+                        Integer(w("alsa_hardware_device_spinbutton").value).to_s + "," +
+                        Integer(w("alsa_hardware_subdevice_spinbutton").value).to_s
+                elsif w("alsa_plugin_radiobutton").active?
+                    ret = "alsaplugin," + 
+                        Integer(w("alsa_plugin_card_spinbutton").value).to_s + "," +
+                        Integer(w("alsa_plugin_device_spinbutton").value).to_s + "," +
+                        Integer(w("alsa_plugin_subdevice_spinbutton").value).to_s
+                elsif w("oss_radiobutton").active?
+                    ret = @oss_devices[w("oss_optionmenu").history]
+                end
+            when 2
+                if w("jack_alsa_radiobutton").active?
+                    ret = "jack_alsa"
+                elsif w("jack_client_radiobutton").active?
+                    ret = "jack_auto," + w("jack_client_entry").text
+                elsif w("jack_generic_radiobutton").active?
+                    ret = w("jack_generic_entry").text == "" ?
+                        "jack" : "jack_generic," + w("jack_generic_entry").text
+                end
+            when 3
+                if w("misc_loopback_radiobutton").active?
+                    ret = "loop," + Integer(w("misc_loopback_spinbutton").value).to_s
+                elsif w("misc_generic_radiobutton").active?
+                    ret = w("misc_generic_entry").text
+                end
         end
+        ret
     end
 end # AudioObjectsDialog
 
