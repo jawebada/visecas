@@ -241,7 +241,7 @@
 		      <signal name="activate" handler="action_add_audio_objects" last_modification_time="Thu, 08 Jan 2004 13:07:50 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image370">
+			<widget class="GtkImage" id="image373">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-add</property>
 			  <property name="icon_size">1</property>
@@ -277,7 +277,7 @@
 		      <signal name="activate" handler="action_attach" last_modification_time="Thu, 08 Jan 2004 13:05:57 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image371">
+			<widget class="GtkImage" id="image374">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-convert</property>
 			  <property name="icon_size">1</property>
@@ -350,7 +350,7 @@
 		      <signal name="activate" handler="action_selected_chains_toggle_muting" last_modification_time="Thu, 08 Jan 2004 16:17:49 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image372">
+			<widget class="GtkImage" id="image375">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-no</property>
 			  <property name="icon_size">1</property>
@@ -371,7 +371,7 @@
 		      <signal name="activate" handler="action_selected_chains_toggle_bypass" last_modification_time="Thu, 08 Jan 2004 13:05:57 GMT"/>
 
 		      <child internal-child="image">
-			<widget class="GtkImage" id="image373">
+			<widget class="GtkImage" id="image376">
 			  <property name="visible">True</property>
 			  <property name="stock">gtk-redo</property>
 			  <property name="icon_size">1</property>
@@ -495,7 +495,7 @@
 		<widget class="GtkMenu" id="menuitem4_menu">
 
 		  <child>
-		    <widget class="GtkMenuItem" id="ecasound_user_guide1">
+		    <widget class="GtkMenuItem" id="menu_help_userguide">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">Ecasound _User Guide</property>
 		      <property name="use_underline">True</property>
