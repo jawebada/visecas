@@ -29,61 +29,61 @@ class OperatorsBrowser < Gtk::Dialog
     RESPONSE_ADD = 1
     RESPONSE_CLOSE = 2
 
-    def initialize(application)
+    def initialize(presets = nil, internals = nil, ladspa = nil)
         super()
-        @application = application
+
         self.modal = true
-        self.add_button(Gtk::Stock::ADD, RESPONSE_ADD)
-        close = self.add_button(Gtk::Stock::CLOSE, RESPONSE_CLOSE)
-        close.can_default = true
-        close.grab_default()
         self.set_default_size(450, 338)
         self.has_separator = false
         self.border_width = 6
         self.vbox.spacing = 12
+        self.add_button(Gtk::Stock::ADD, RESPONSE_ADD)
+        close = self.add_button(Gtk::Stock::CLOSE, RESPONSE_CLOSE)
+        close.can_default = true
+        close.grab_default()
+
         @glade = GladeXML.new(File::join(GLADE_DIR, "operators-browser.glade")) {|handler| method(handler)}
         @glade.get_widget("child").reparent(self.vbox)
-        @name = @glade.get_widget("name")
-        @description = @glade.get_widget("description")
 
-        prepare_listviews()
-        
-        self.signal_connect("delete_event") {|dlg, id| dlg.hide_on_delete() }
-        self.signal_connect("response") {|dlg, id| dlg.hide() if not id == RESPONSE_ADD }
-    end
+        @name_label = @glade.get_widget("name")
+        @description_label = @glade.get_widget("description")
 
-    private
-
-    def prepare_listviews()
         @parameters_store = Gtk::ListStore.new(String)
         @parameters_view = @glade.get_widget("parameters_view")
         @parameters_view.model = @parameters_store
         @parameters_view.insert_column(-1, "Parameter", Gtk::CellRendererText.new(), :text => 0)
         @parameters_view.selection.mode = Gtk::SELECTION_NONE
-        
-        @internal_store = prepare_list_store(@application.internal_operators, "internal")
-        @presets_store = prepare_list_store(@application.operator_presets, "preset")
-        @ladspa_store = prepare_list_store(@application.ladspa_plugins, "ladspa")
-        
-        @ladspa_view = prepare_view(@glade.get_widget("ladspa_view"), @ladspa_store)
-        @internal_view = prepare_view(@glade.get_widget("internal_view"), @internal_store)
-        @presets_view = prepare_view(@glade.get_widget("presets_view"), @presets_store)
 
-        @ladspa_view.signal_connect("row-activated") do |view, path, column|
-            signal_emit("response", RESPONSE_ADD)
-        end
-        @internal_view.signal_connect("row-activated") do |view, path, column|
-            signal_emit("response", RESPONSE_ADD)
-        end
-        @presets_view.signal_connect("row-activated") do |view, path, column|
-            signal_emit("response", RESPONSE_ADD)
-        end
+        @stores = {}
+        @views = {}
 
-        @presets_view.grab_focus()
+        self.preset_operators= presets if presets
+        self.internal_operators= internals if internals
+        self.ladspa_operators= ladspa if ladspa
+        
+        self.signal_connect("delete_event") {|dlg, id| dlg.hide_on_delete() }
+        self.signal_connect("response") {|dlg, id| dlg.hide() if not id == RESPONSE_ADD }
     end
 
+    def preset_operators=(hash)
+        prepare_list_store(hash, "preset")
+        prepare_view(@glade.get_widget("presets_view"), "preset")
+    end
+
+    def internal_operators=(hash)
+        prepare_list_store(hash, "internal")
+        prepare_view(@glade.get_widget("internal_view"), "internal")
+    end
+
+    def ladspa_operators=(hash)
+        prepare_list_store(hash, "ladspa")
+        prepare_view(@glade.get_widget("ladspa_view"), "ladspa")
+    end
+
+    private
+
     def prepare_list_store(operators, type)
-        store = Gtk::ListStore.new(String, String, Array, String, String)
+        store = @stores[type] || Gtk::ListStore.new(String, String, Array, String, String)
         operators.each_pair do |id, operator|
             iter = store.append()
             iter[0] = operator["name"]
@@ -98,23 +98,26 @@ class OperatorsBrowser < Gtk::Dialog
             iter[4] = type
         end
         store.set_sort_column_id(0)
-        return store
+        @stores[type] = store
     end
 
-    def prepare_view(view, model)
-        view.model = model
+    def prepare_view(view, type)
+        view.model = @stores[type]
         view.insert_column(-1, "Operator", Gtk::CellRendererText.new(), :text => 0)
         view.selection.mode = Gtk::SELECTION_SINGLE
         view.selection.signal_connect("changed") { |sel| selection_changed(sel) }
         view.selection.select_path(Gtk::TreePath.new("0"))
-        return view
+        view.signal_connect("row-activated") do |view, path, column|
+            signal_emit("response", RESPONSE_ADD)
+        end
+        @views[type] = view
     end
 
     def selection_changed(selection)
         sel = selection.selected
         unless sel.nil?()
-            @name.markup = "<b>#{sel[0]}</b>"
-            @description.text = sel[1]
+            @name_label.markup = "<b>#{sel[0]}</b>"
+            @description_label.text = sel[1]
             @parameters_store.clear()
             sel[2].each do |par|
                 iter = @parameters_store.append()
@@ -127,11 +130,11 @@ class OperatorsBrowser < Gtk::Dialog
     def page_changed(nb, pg, nr)
         sel = case nr
             when 0
-                @presets_view.selection
+                @views["preset"].selection
             when 1
-                @internal_view.selection
+                @views["internal"].selection
             when 2
-                @ladspa_view.selection
+                @views["ladspa"].selection
         end
         sel.signal_emit("changed")
     end

@@ -93,6 +93,7 @@ class Application < GLib::Object
         puts "scanning ladspa plugins..."
         @cops_ladspa = parse_operator_descriptions(command("map-ladspa-list"))
         
+        puts "making sure that there are only unique chainoperator names..."
         @chainoperators = {}
         [@cops_presets, @cops_internal, @cops_ladspa].each do |hash|
             to_hide = []
@@ -117,10 +118,13 @@ class Application < GLib::Object
 
         @engine = Engine.new(self)
 
-        @operators_browser = Visecas::OperatorsBrowser.new(self)
+        @operators_browser = Visecas::OperatorsBrowser.new()
         @operators_browser.signal_connect("response") do |dlg, id|
             dlg.hide() if id != OperatorsBrowser::RESPONSE_ADD
         end
+        @operators_browser.internal_operators = @cops_internal
+        @operators_browser.ladspa_operators = @cops_ladspa
+        @operators_browser.preset_operators = @cops_presets
         
         @audio_objects_dialog = AudioObjectsDialog.new()
         @audio_objects_dialog.signal_connect("response") do |dlg, id|
@@ -233,10 +237,9 @@ EOS
             pd.title = "Preferences #{NAME}"
             pd.signal_connect("response") do |dlg, id|
                 if id == PreferencesDialog::RESPONSE_SAVE
-                    # prefs.each_pair do |key, value| puts "#{key}: #{value}" end
                     prefs.write()
                 end
-                pd.destroy()
+                dlg.destroy()
                 self.prefsvisible = false
             end
             pd.show_all()
