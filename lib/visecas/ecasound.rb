@@ -73,7 +73,7 @@ end # VersionString
 module Ecasound
 
 REQUIRED_VERSION = VersionString.new("2.2.0")
-TIMEOUT = 7 # seconds before sync is called 'lost'
+TIMEOUT = 15 # seconds before sync is called 'lost'
 
 class EcasoundError < RuntimeError; end
 class EcasoundCommandError < EcasoundError
@@ -105,6 +105,7 @@ class ControlInterface
             $stderr.reopen(open("/dev/null", "w"))
             exec("#{@@ecasound} #{args.to_s} -c -D -d:256 ")
         else
+            @ecapipe.sync = true
             # parent
             command("int-output-mode-wellformed")
         end
@@ -117,34 +118,30 @@ class ControlInterface
     def command(cmd)
         @mutex.synchronize do
             cmd.strip!()
+            #puts "command: #{cmd}"
+            
             @ecapipe.write(cmd + "\n")
 
-            #print "command: #{cmd}\n"
-
             response = ""
-            
-            # TimeoutError is raised unless response is complete
             begin
+                # TimeoutError is raised unless response is complete
                 timeout(TIMEOUT) do
                     loop do
                         response += read()
-                        if response =~ /256 ([0-9]{1,5}) (\-|i|li|f|s|S|e)\r\n(.*)\r\n\r\n/m
-                            # we have a valid response
-                            break
-                        end
+                        break if response =~ /256 ([0-9]{1,5}) (\-|i|li|f|s|S|e)\r\n(.*)\r\n\r\n/m
                     end
                 end
             rescue TimeoutError
                 raise(EcasoundError, "lost synchronisation to ecasound subprocess\nlast command was: '#{cmd}'")
             end
             
-            content = $~[3][0, $~[1].to_i()]
+            content = $3[0, $1.to_i()]
 
-            #print "type: '#{$~[2]}'\n"
-            #print "length: #{$~[1]}\n"
-            #print "content: #{content}\n"
+            #puts "type: '#{$2}'"
+            #puts "length: #{$1}"
+            #puts "content: #{content}"
 
-            case $~[2]
+            case $2
                 when "e"
                     raise(EcasoundCommandError.new(cmd, content))
                 when "-"
@@ -168,7 +165,7 @@ class ControlInterface
     def read()
         buffer = ""
         while select([@ecapipe], nil, nil, 0)
-            buffer = buffer + @ecapipe.read(1).to_s
+            buffer += @ecapipe.read(1) or ""
         end
         return buffer
     end
