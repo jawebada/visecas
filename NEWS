@@ -1,3 +1,7 @@
+Features:
+    * shift left-click resets operator parameters to default values
+Fixes:
+    * edit preferences crashes (once more)
 2004-01-22, 0.3.5
 Fixes:
     * broken audio objects' dialog

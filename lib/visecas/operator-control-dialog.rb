@@ -202,6 +202,12 @@ class OperatorControlDialog < Gtk::Dialog
             sb = Gtk::SpinButton.new()
             sb.adjustment = adj
             sb.digits = param["integer_flag"] ? 0 : 3
+            sb.signal_connect("button_press_event") do |sb, event|
+               if event.button == 1 && 
+                   (event.state & Gdk::Window::SHIFT_MASK == Gdk::Window::SHIFT_MASK)
+                   sb.value = param["defaultvalue"]
+               end
+            end
             hbox.pack_start(sb, false, false)
             
             if lower_border == -MAX_BORDER
@@ -234,6 +240,12 @@ class OperatorControlDialog < Gtk::Dialog
                 scale_box.pack_start(hbox, true, true)
                 vscale = Gtk::HScale.new(adj)
                 vscale.draw_value = false
+                vscale.signal_connect("button_press_event") do |sb, event|
+                   if event.button == 1 && 
+                       (event.state & Gdk::Window::SHIFT_MASK == Gdk::Window::SHIFT_MASK)
+                       sb.value = param["defaultvalue"]
+                   end
+                end
                 scale_box.pack_start(vscale, true, true)
                 w = scale_box
                 @has_hscale = true
