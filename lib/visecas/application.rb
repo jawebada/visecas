@@ -78,6 +78,8 @@ class Application < GLib::Object
     def initialize(argv = [])
         super()
 
+        puts NAME + " " + VERSION
+
         @eci = Ecasound::ControlInterface.new()
         
         if argv.include?("-h") or argv.include?("--help")
@@ -147,11 +149,12 @@ class Application < GLib::Object
         rescue Ecasound::EcasoundCommandError
             message =<<EOS
 An Ecasound (IAM) command caused an error!
-The command was: '#{$!.command}'
-The error was: '#{$!.error}'
+
+The command '#{$!.command}' lead to:
+'#{$!.error}'
 
 #{NAME} is going to be resynced to correctly show Ecasound's state.
-If you can reproduce this error message please consider filing a bug report.
+If you think that #{NAME} is responsible for this error and if you can reproduce it please consider filing a bug report.
 See #{HOMEPAGE} for details.
 EOS
             puts message
