@@ -22,18 +22,39 @@ module Visecas
 
 class Preferences < Hash
     def initialize(file = nil)
+        self["midi-device"] = "rawmidi,/dev/midi"
+        self["default-output"] = "/dev/dsp"
+        self["default-audio-format"] = "s16_le,2,44100,i"
+        self["default-to-precise-sample-rates"] = "false"
+        self["default-to-interactive-mode"] = "false"
+        self["bmode-defaults-nonrt"] = "1024,false,50,false,100000,true"
+        self["bmode-defaults-rt"] = "1024,true,50,true,100000,true"
+        self["bmode-defaults-rtlowlatency"] = "256,true,50,true,100000,false"
+        self["resource-directory"] = "/usr/local/share/ecasound"
+        self["resource-file-genosc-envelopes"] = "generic_oscillators"
+        self["resource-file-effect-presets"] = "effect_presets"
+        self["ladspa-plugin-directory"] = "/usr/local/lib/ladspa"
+        self["ext-cmd-text-editor"] = "pico"
+        self["ext-cmd-text-editor-use-getenv"] = "true"
+        self["ext-cmd-wave-editor"] = "ecawave"
+        self["ext-cmd-mp3-input"] = "mpg123 --stereo -r %s -b 0 -q -s -k %o %f"
+        self["ext-cmd-mp3-output"] = "lame -b %B -s %S -x -S - %f"
+        self["ext-cmd-ogg-input"] = "ogg123 -d raw --file=- %f"
+        self["ext-cmd-ogg-output"] = "oggenc -b %B --raw --raw-bits=%b --raw-chan=%c --raw-rate=%s --output=%f -"
+        self["ext-cmd-mikmod"] = "mikmod -d stdout -o 16s -q -f %s -p 0 --noloops %f"
+        self["ext-cmd-timidity"] = "timidity -Or1S -id -s %s -o - %f"
+        @file = file
         read(file) if file
     end
 
     def read(file)
         @file = file
+        return if not test(?e @file)
         lines = IO.readlines(file)
         lines.each_index do |i|
             next if lines[i] =~ /^#/
             lines[i] =~ /(\S+)\s*( |=)\s*(\S.+)/
-            key = $~[1]
-            value = $~[3]
-            self[key] = value
+            self[$1] = $3
         end
     end
 

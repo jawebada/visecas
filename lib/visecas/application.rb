@@ -146,14 +146,15 @@ class Application < GLib::Object
             ret = eci_command(arg)
         rescue Ecasound::EcasoundCommandError
             message =<<EOS
-An ecasound (iam) command caused an error!
+An Ecasound (IAM) command caused an error!
 The command was: '#{$!.command}'
 The error was: '#{$!.error}'
 
 #{NAME} is going to be resynced to correctly show Ecasound's state.
 If you can reproduce this error message please consider filing a bug report.
-(See #{HOMEPAGE})
+See #{HOMEPAGE} for details.
 EOS
+            puts message
             d = Gtk::MessageDialog.new(
                 nil, 
                 Gtk::Dialog::MODAL|Gtk::Dialog::DESTROY_WITH_PARENT,
@@ -230,33 +231,20 @@ EOS
     end
 
     def show_preferences()
-        prefs_file = File::join(`cd; pwd`.chomp, ".ecasound/ecasoundrc")
-        if test(?e, prefs_file)
-            prefs = Preferences.new(prefs_file)
-            pd = PreferencesDialog.new(prefs)
-            pd.title = "Preferences #{NAME}"
-            pd.signal_connect("response") do |dlg, id|
-                if id == PreferencesDialog::RESPONSE_SAVE
-                    prefs.write()
-                end
-                dlg.destroy()
-                self.prefsvisible = false
+        home = ENV["HOME"] || `cd; pwd`.chomp
+        prefs_file = File.join(home, ".ecasound/ecasoundrc")
+        prefs = Preferences.new(prefs_file)
+        pd = PreferencesDialog.new(prefs)
+        pd.title = "Preferences #{NAME}"
+        pd.signal_connect("response") do |dlg, id|
+            if id == PreferencesDialog::RESPONSE_SAVE
+                prefs.write()
             end
-            pd.show_all()
-            self.prefsvisible = true
-        else
-            d = Gtk::MessageDialog.new(
-                nil, 
-                Gtk::Dialog::MODAL|Gtk::Dialog::DESTROY_WITH_PARENT,
-                Gtk::MessageDialog::WARNING,
-                Gtk::MessageDialog::BUTTONS_OK,
-                "The file '#{prefs_file}' does not exist.\nPlease copy the default preferences file which comes with Ecasound to this location."
-                )
-            d.has_separator = false
-            d.resizable = false
-            d.signal_connect("response") {|dlg, id| dlg.destroy()}
-            d.show_all()
+            dlg.destroy()
+            self.prefsvisible = false
         end
+        pd.show_all()
+        self.prefsvisible = true
     end
 
     def chainsetups_status()
