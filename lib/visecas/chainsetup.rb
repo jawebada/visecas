@@ -646,16 +646,16 @@ class Chainsetup < GLib::Object
             end if connected
         end
 
+        # chainsetup was dis-/connected
+        signal_connect("notify::connected") do |cs, pspec|
+            @audio_objects.each do |model, path, iter|
+                update_audio_object_format(iter[0], iter[1])
+            end
+        end
         # position changed
         signal_connect("notify::position") do |cs, pspec|
             @audio_objects.each do |model, path, iter|
-                if iter[0] == "input"
-                    iter[3] = PositionString.new(audio_input_position(iter[1]))
-                    iter[4] = PositionString.new(audio_input_length(iter[1]))
-                else
-                    iter[3] = PositionString.new(audio_output_position(iter[1]))
-                    iter[4] = PositionString.new(audio_output_length(iter[1]))
-                end
+                update_audio_object_position(iter[0], iter[1])
             end
         end
     end
@@ -741,14 +741,11 @@ class Chainsetup < GLib::Object
         iter[2] = status["type"] || "unknown"
         iter[3] = PositionString.new(0)
         iter[4] = PositionString.new(0)
-        format = io == "input" ? 
-            audio_input_format(name) :
-            audio_output_format(name)
-        iter[5] = AudioFormatString.new(format).human_readable
-        update_audio_object(io, name)
+        update_audio_object_format(io, name)
+        update_audio_object_position(io, name)
     end
 
-    def update_audio_object(io, name)
+    def update_audio_object_position(io, name)
         if io == "input"
             iter = @audio_objects.get_iter(command("ai-list").index(name).to_s)
             iter[3] = PositionString.new(audio_input_position(name))
@@ -758,6 +755,16 @@ class Chainsetup < GLib::Object
             iter[3] = PositionString.new(audio_output_position(name))
             iter[4] = PositionString.new(audio_output_length(name))
         end
+    end
+
+    def update_audio_object_format(io, name)
+        iter = io == "input" ? 
+            @audio_objects.get_iter(command("ai-list").index(name).to_s) :
+            @audio_objects.get_iter((command("ai-list").length + command("ao-list").index(name)).to_s)
+        format = io == "input" ? 
+            audio_input_format(name) :
+            audio_output_format(name)
+        iter[5] = AudioFormatString.new(format).human_readable
     end
     
     def audio_objects_status()
