@@ -20,7 +20,7 @@
 module Visecas
 
 # this is set by pre-config.rb
-PREFIX = ".."
+PREFIX = File.join(VISECAS_DIR, "..")
 
 SHARE_DIR = File::join(PREFIX, "share")
 GLADE_DIR = File::join(SHARE_DIR, "visecas/glade")

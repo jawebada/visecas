@@ -19,7 +19,7 @@
 # ---------------------------------------------------------------------------
 
 # for testing purposes
-$:.push("../lib")
+$:.push(File.join(File.dirname($0), "../lib"))
 
 # this is set by pre-config.rb
 LIBDIR = "."
