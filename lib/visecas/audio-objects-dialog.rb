@@ -54,6 +54,11 @@ class AudioObjectsDialog < Gtk::FileSelection
         prepare_others_page()
         prepare_audio_format_box()
 
+        # XXX ??? row-activated leads to action_new ???
+        file_list.signal_connect("row-activated") do |tv, path, column|
+            signal_emit("response", RESPONSE_ADD_INPUT)
+            true
+        end
         signal_connect("response") do |dlg, id|
             if [RESPONSE_ADD_INPUT, RESPONSE_ADD_OUTPUT].include?(id)
                 if @notebook.page == 0

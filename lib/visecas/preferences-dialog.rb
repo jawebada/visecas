@@ -32,7 +32,6 @@ class PreferencesDialog < Gtk::Dialog
     def initialize(preferences)
         super()
         @preferences = preferences
-        self.title = "Preferences #{NAME}"
         self.add_button(Gtk::Stock::CANCEL, RESPONSE_CANCEL)
         self.add_button(Gtk::Stock::SAVE, RESPONSE_SAVE)
         @glade = GladeXML.new(File::join(GLADE_DIR, "preferences.glade"), "child") {|handler| method(handler)}

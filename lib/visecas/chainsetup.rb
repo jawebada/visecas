@@ -53,6 +53,48 @@ class Chainsetup < GLib::Object
     end
 
     install_property(GLib::Param::Boolean.new(
+        "update_mode",
+        "Update mode",
+        "true if audio objects are opened for updating",
+        false,
+        GLib::Param::READABLE |
+        GLib::Param::WRITABLE
+    ))
+
+    def update_mode()
+        status()["options"] =~ /\-X/ ? true : false
+    end
+
+    def update_mode=(b)
+        if b
+            command("cs-option -X")
+        else
+            command("cs-option -x")
+        end
+    end
+
+    install_property(GLib::Param::Boolean.new(
+        "xruns",
+        "Xruns",
+        "true if processing is stopped when an xrun occurs",
+        false,
+        GLib::Param::READABLE |
+        GLib::Param::WRITABLE
+    ))
+
+    def xruns()
+        status()["options"] =~ /z:xruns/ ? true : false
+    end
+
+    def xruns=(b)
+        if b
+            command("cs-option -z:xruns")
+        else
+            command("cs-option -z:noxruns")
+        end
+    end
+
+    install_property(GLib::Param::Boolean.new(
         "dirty",
         "Dirty",
         "true if the chainsetup needs to be saved",

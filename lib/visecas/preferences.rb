@@ -49,7 +49,7 @@ class Preferences < Hash
 
     def read(file)
         @file = file
-        return if not test(?e @file)
+        return if not test(?e, @file)
         lines = IO.readlines(file)
         lines.each_index do |i|
             next if lines[i] =~ /^#/
