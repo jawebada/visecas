@@ -57,6 +57,8 @@ SAMPLE_RATE_REGEX = /#{SAMPLE_RATE_VALUES.join("|")}|[0-9]/
 class AudioFormatString < String
     def initialize(str, human_readable = false)
         @format = str.split(",")
+        @format[0] = "u8" if @format[0] == "8"
+        @format[0] = "s16_le" if not SAMPLE_FORMATS_KEYS.include?(@format[0])
         raise("unexpected format of AudioFormatString: '#{str}'") if 
             @format.length < 3
     end
@@ -90,13 +92,11 @@ class AudioFormatString < String
     end
 
     def interleaved?()
-        return false if @format[3] == "n"
-        true
+        @format[3] == "n" ? false : true
     end
 
     def human_interleaved()
-        return "Interleaved" if interleaved?
-        "Non-interleaved"
+        interleaved? ? "Interleaved" : "Non-interleaved"
     end
 
     def human_readable()

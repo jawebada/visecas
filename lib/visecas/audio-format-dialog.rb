@@ -71,19 +71,15 @@ class AudioFormatDialog < Gtk::Dialog
     end
 
     def analyse_format(str)
-        format = str.split(",")
-        @sample_format.history = SAMPLE_FORMATS_KEYS.index(format[0])
-        @channels_entry.text = CHANNELS_KEYS.include?(format[1]) ? 
-            CHANNELS_VALUES[CHANNELS_KEYS.index(format[1])] : 
-            format[1]
-        @sample_rate_entry.text = SAMPLE_RATE_KEYS.include?(format[2]) ?
-            SAMPLE_RATE_VALUES[SAMPLE_RATE_KEYS.index(format[2])] :
-            format[2]
-        if format[3]
-            @interleaved.active = format[3] == "i"
-        else
-            @interleaved.active = true
-        end
+        format = AudioFormatString.new(str)
+        @sample_format.history = SAMPLE_FORMATS_KEYS.index(format.sample_format)
+        @channels_entry.text = CHANNELS_KEYS.include?(format.channels) ? 
+            CHANNELS_VALUES[CHANNELS_KEYS.index(format.channels)] : 
+            format.channels
+        @sample_rate_entry.text = SAMPLE_RATE_KEYS.include?(format.sample_rate) ?
+            SAMPLE_RATE_VALUES[SAMPLE_RATE_KEYS.index(format.sample_rate)] :
+            format.sample_rate
+        @interleaved.active = format.interleaved?
     end
 
     def validate_input(entry, txt, regex)
