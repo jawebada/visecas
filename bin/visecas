@@ -19,7 +19,8 @@
 # ---------------------------------------------------------------------------
 
 # for testing purposes
-$:.push(File.join(File.dirname($0), "../lib"))
+VISECAS_DIR = File.dirname($0)
+$:.push(File.join(VISECAS_DIR, "../lib"))
 
 # this is set by pre-config.rb
 LIBDIR = "."
