@@ -18,21 +18,14 @@ Features
 
 * All arguments are passed on to Ecasound.
   You can start Visecas from the command line as you would start Ecasound.
-
 * This implies that Visecas does not introduce another file format but can read
   and write ecs files (actually Ecasound reads and writes them itself).
-
 * Every chainsetup of an Ecasound session is displayed in one toplevel window.
-
 * Chains can be added, removed, renamed, muted and bypassed.
-
 * Audio objects can be added, removed and connected.
-
 * Chainoperators can be added, removed and controlled by
   dynamically created dialogs.
-
 * The engine status is displayed and can be controlled.
-
 * Ecasound's preferences can be edited.
 
 
@@ -53,10 +46,8 @@ Dependencies
 
 * Ruby 1.8.x (1.6 untested, may work)
 http://www.ruby-lang.org/en
-
 * GTK+ > 2.0
 http://www.gtk.org
-
 * A recent version of libglade
 http://ftp.gnome.org/pub/GNOME/sources/libglade/2.0/
 
